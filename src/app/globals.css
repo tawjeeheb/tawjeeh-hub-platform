@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-white text-navy antialiased;
+    font-feature-settings: "kern", "liga", "calt";
+    text-rendering: optimizeLegibility;
+  }
+  /* Display font + tight tracking for headings (Cairo). */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+    letter-spacing: -0.012em;
+    line-height: 1.18;
+  }
+  ::selection {
+    @apply bg-teal-100 text-navy;
+  }
+  /* Visible, on-brand keyboard focus everywhere. */
+  :focus-visible {
+    outline: 2px solid #049e9e;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  /* Eyebrow chip with a leading dot. */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-navy/10 bg-white/80 px-3.5 py-1.5 text-xs font-bold tracking-wide text-navy/80 shadow-card backdrop-blur;
+  }
+  .eyebrow::before {
+    content: "";
+    @apply h-1.5 w-1.5 rounded-full bg-teal;
+  }
+
+  /* Surface card — hairline border + restrained shadow. */
+  .surface {
+    @apply rounded-2xl border border-navy/[0.08] bg-white shadow-card;
+  }
+
+  /* Interactive lift for clickable cards. */
+  .lift {
+    @apply transition-all duration-300 ease-out hover:-translate-y-1 hover:border-navy/15 hover:shadow-elev;
+  }
+
+  /* Thin brand accent rule. */
+  .accent-rule {
+    @apply h-1 w-14 rounded-full bg-brand-gradient;
+  }
+
+  /* Tag/pill used inside the sample professional card. */
+  .field-tag {
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold;
+  }
+}
+
+@layer utilities {
+  /* Subtle dotted "guidance" grid. */
+  .guidance-grid {
+    background-image: radial-gradient(
+      rgba(2, 54, 99, 0.05) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+  }
+  /* Soft layered brand wash for hero / bands. */
+  .brand-wash {
+    background:
+      radial-gradient(48% 46% at 88% 6%, rgba(4, 158, 158, 0.1), transparent 70%),
+      radial-gradient(46% 44% at 4% 96%, rgba(94, 67, 96, 0.09), transparent 72%);
+  }
+  /* Hairline top accent used on featured cards. */
+  .top-accent {
+    box-shadow: inset 0 3px 0 0 rgba(4, 158, 158, 0.9);
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
