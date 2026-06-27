@@ -7,7 +7,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    branch: claude/clever-davinci-79zjrg
+    branch: main
     buildCommand: npm ci && npm run build
     startCommand: npm run start -- -p $PORT
     healthCheckPath: /
