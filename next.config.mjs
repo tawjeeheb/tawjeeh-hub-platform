@@ -2,6 +2,13 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Serialize static generation (single worker) to keep the BUILD's peak memory
+  // low enough for constrained hosts (e.g. Render free tier ~512MB). Trades a
+  // little build speed for a reliable, non-OOM build.
+  experimental: {
+    cpus: 1,
+    workerThreads: false,
+  },
   images: {
     remotePatterns: [
       // Supabase Storage public assets (covers), when configured.
