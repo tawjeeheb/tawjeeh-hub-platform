@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   LayoutDashboard,
   Package,
+  Briefcase,
   ShoppingBag,
   Users,
   ScrollText,
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 const NAV = [
   { href: "/admin", label: "نظرة عامة", icon: LayoutDashboard },
+  { href: "/admin/jobs", label: "الوظائف", icon: Briefcase },
   { href: "/admin/products", label: "المنتجات", icon: Package },
   { href: "/admin/orders", label: "الطلبات", icon: ShoppingBag },
   { href: "/admin/customers", label: "العملاء", icon: Users },

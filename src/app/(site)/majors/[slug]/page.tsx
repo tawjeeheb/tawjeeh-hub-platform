@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Briefcase, BookOpen } from "lucide-react";
-import { JobCard } from "@/components/jobs/job-card";
+import { JobsBrowser } from "@/components/jobs/jobs-browser";
 import { getMatchedJobs } from "@/lib/data/jobs";
 import { getMajor } from "@/lib/data/majors";
 import { getPublicProducts } from "@/lib/data/products";
@@ -44,8 +44,6 @@ export default async function MajorHubPage({
     relatedProducts = [];
   }
 
-  const saveHref = `/auth/login?next=${encodeURIComponent(`/majors/${major.slug}`)}`;
-
   return (
     <>
       <section className="border-b border-navy/10 bg-offwhite">
@@ -70,17 +68,15 @@ export default async function MajorHubPage({
       </section>
 
       <div className="container grid gap-8 py-12 lg:grid-cols-[1fr_300px]">
-        {/* Jobs */}
-        <div className="min-w-0 space-y-5">
+        {/* Jobs — searchable + filterable */}
+        <div className="min-w-0">
           {matches.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-navy/15 bg-offwhite p-10 text-center text-sm text-navy/60">
               لا توجد وظائف مطابقة حاليًا. تُحدَّث الفرص باستمرار — أنشئ حسابًا
               لتصلك التنبيهات عند نزول وظائف جديدة لتخصصك.
             </p>
           ) : (
-            matches.map((m) => (
-              <JobCard key={m.job.id} match={m} major={major} saveHref={saveHref} />
-            ))
+            <JobsBrowser matches={matches} major={major} />
           )}
         </div>
 

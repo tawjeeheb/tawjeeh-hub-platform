@@ -21,6 +21,7 @@ const ROUTES = [
   "/majors",
   "/majors/biology",
   "/majors/sharia",
+  "/saved",
   "/auth/login",
   "/auth/signup",
   "/products",

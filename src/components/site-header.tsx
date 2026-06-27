@@ -6,8 +6,8 @@ import { getSessionUser } from "@/lib/auth";
 
 const NAV = [
   { href: "/majors", label: "الوظائف حسب التخصص" },
+  { href: "/saved", label: "وظائفي المحفوظة" },
   { href: "/products", label: "الأدلة المهنية" },
-  { href: "/#how", label: "كيف يعمل" },
   { href: "/about", label: "فكرة المنصة" },
 ];
 

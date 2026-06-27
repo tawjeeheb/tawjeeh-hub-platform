@@ -1,4 +1,5 @@
-import Link from "next/link";
+"use client";
+
 import {
   MapPin,
   Building2,
@@ -7,12 +8,12 @@ import {
   Sparkles,
   GraduationCap,
   BadgeCheck,
-  Bookmark,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { fitLabel } from "@/lib/jobs/matching";
 import { guidanceForJob } from "@/lib/jobs/guidance";
+import { SaveJobButton } from "@/components/jobs/save-job-button";
 import type { MatchedJob } from "@/lib/jobs/types";
 import type { Major } from "@/lib/majors";
 
@@ -32,11 +33,9 @@ function fitVariant(score: number): "available" | "coming" | "neutral" {
 export function JobCard({
   match,
   major,
-  saveHref,
 }: {
   match: MatchedJob;
   major?: Major;
-  saveHref: string;
 }) {
   const { job, score, reasons } = match;
   const g = guidanceForJob(job, major);
@@ -135,12 +134,16 @@ export function JobCard({
         >
           التقديم <ExternalLink className="h-4 w-4" />
         </a>
-        <Link
-          href={saveHref}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border border-navy/15 px-4 text-sm font-semibold text-navy/70 transition-colors hover:bg-navy-50"
-        >
-          <Bookmark className="h-4 w-4" /> حفظ الوظيفة
-        </Link>
+        <SaveJobButton
+          job={{
+            id: job.id,
+            title: job.title,
+            employer: job.employer,
+            city: job.city,
+            applyUrl: job.applyUrl,
+            majorSlug: major?.slug,
+          }}
+        />
       </div>
     </article>
   );
