@@ -12,8 +12,15 @@ services:
     startCommand: npm run start -- -p $PORT
     healthCheckPath: /
     envVars:
+      # Match the tested runtime (build is verified on Node 22).
       - key: NODE_VERSION
-        value: "20"
+        value: "22"
+      # Keep Next's build heap under the free-tier memory ceiling so the build
+      # GCs instead of being OOM-killed (the live build stalled as the app grew).
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=460"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
       # Non-secret defaults (kept in the blueprint):
       - key: SUPABASE_PRIVATE_BUCKET
         value: product-files
