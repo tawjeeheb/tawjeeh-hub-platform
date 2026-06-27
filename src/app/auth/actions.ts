@@ -26,6 +26,43 @@ function safeNext(raw: FormDataEntryValue | null): string {
   return safeRelativePath(typeof raw === "string" ? raw : undefined);
 }
 
+// Only these providers are accepted — never trust the raw form value.
+const OAUTH_PROVIDERS = ["google", "apple"] as const;
+type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
+
+function isProvider(v: FormDataEntryValue | null): v is OAuthProvider {
+  return typeof v === "string" && (OAUTH_PROVIDERS as readonly string[]).includes(v);
+}
+
+// Starts a hosted OAuth sign-in (Google / Apple). On success we redirect the
+// browser to the provider; the session is finalized at /auth/callback. Errors
+// (or an unconfigured backend) bounce back to the login page with a code — we
+// never surface raw provider/Supabase errors. `next` is sanitized to a
+// same-origin path so OAuth can never be abused as an open redirect.
+export async function signInWithProviderAction(formData: FormData): Promise<void> {
+  const provider = formData.get("provider");
+  const safe = safeNext(formData.get("next"));
+
+  if (!isProvider(provider)) {
+    redirect(`/auth/login?error=oauth&next=${encodeURIComponent(safe)}`);
+  }
+  if (!isSupabaseConfigured) {
+    redirect(`/auth/login?error=auth_disabled&next=${encodeURIComponent(safe)}`);
+  }
+
+  const supabase = createSupabaseServerClient()!;
+  const redirectTo = `${env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent(safe)}`;
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo },
+  });
+
+  if (error || !data?.url) {
+    redirect(`/auth/login?error=oauth&next=${encodeURIComponent(safe)}`);
+  }
+  redirect(data.url);
+}
+
 export async function loginAction(
   _prev: AuthFormState,
   formData: FormData,
@@ -74,7 +111,9 @@ export async function signupAction(
     password: parsed.data.password,
     options: {
       data: { full_name: parsed.data.full_name },
-      emailRedirectTo: `${env.NEXT_PUBLIC_SITE_URL}/auth/login`,
+      // Confirmation link lands on the callback, which finalizes the session and
+      // sends the user straight to their dashboard (less friction to purchase).
+      emailRedirectTo: `${env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`,
     },
   });
 

@@ -131,6 +131,39 @@ console.log("\n=== Open-redirect protection on /auth/login?next= ===");
   }
 }
 
+console.log("\n=== Social sign-in (Google/Apple) present on auth pages ===");
+{
+  for (const p of ["/auth/login", "/auth/signup"]) {
+    const html = await (await fetch(base + p)).text();
+    const hasGoogle = /بواسطة Google/.test(html);
+    const hasApple = /بواسطة Apple/.test(html);
+    const hasEmail = /البريد الإلكتروني/.test(html);
+    hasGoogle && hasApple && hasEmail
+      ? ok(`${p}: Google + Apple + email all present`)
+      : bad(`${p}: google=${hasGoogle} apple=${hasApple} email=${hasEmail}`);
+  }
+}
+
+console.log("\n=== OAuth callback: safe handling + no open redirect ===");
+{
+  // No code → must redirect back to the login page (never render a session).
+  const noCode = await getRes("/auth/callback");
+  const loc1 = noCode.headers.get("location") ?? "";
+  noCode.status >= 300 && noCode.status < 400 && loc1.includes("/auth/login")
+    ? ok(`callback without code -> redirects to login (${noCode.status})`)
+    : bad(`callback without code -> ${noCode.status} ${loc1}`);
+
+  // Attacker-supplied external `next` must be neutralized (same-origin only).
+  for (const evil of ["https://evil.example.com", "//evil.example.com", "/%5Cevil.example.com"]) {
+    const res = await getRes(`/auth/callback?code=x&next=${encodeURIComponent(evil)}`);
+    const loc = res.headers.get("location") ?? "";
+    const offSite = (/^https?:\/\//i.test(loc) && !loc.startsWith(base)) || loc.startsWith("//");
+    !offSite
+      ? ok(`callback next=${evil} -> no off-site redirect`)
+      : bad(`callback next=${evil} -> redirected to "${loc}"`);
+  }
+}
+
 console.log("\n=== Coming-soon products are NOT purchasable ===");
 {
   // geography-gis-guide is seeded as coming-soon: must show "قيد الإعداد"

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { SignupForm } from "@/components/auth/auth-forms";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { getSessionUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "إنشاء حساب" };
@@ -30,6 +31,14 @@ export default async function SignupPage() {
         </>
       }
     >
+      {/* Social sign-up first — the fastest path to an account */}
+      <OAuthButtons next="/dashboard" />
+      <div className="my-5 flex items-center gap-3">
+        <span className="h-px flex-1 bg-navy/10" />
+        <span className="text-xs font-medium text-navy/40">أو بالبريد الإلكتروني</span>
+        <span className="h-px flex-1 bg-navy/10" />
+      </div>
+
       <SignupForm />
       <p className="mt-5 text-center text-xs leading-6 text-navy/50">
         بإنشائك الحساب فإنك توافق على{" "}
