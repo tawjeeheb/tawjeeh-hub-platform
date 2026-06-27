@@ -1,0 +1,23 @@
+name: verify-render
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe live Render site
+        run: |
+          set +e
+          BASES="https://tawjeeh-hub.onrender.com https://tawjeeh-hub-platform.onrender.com"
+          for BASE in $BASES; do
+            echo "########## $BASE ##########"
+            # Warm up (free tier cold start can take ~60s)
+            curl -s -o /dev/null -m 90 "$BASE/" 
+            for P in / /majors /majors/biology /auth/login /products /sitemap.xml; do
+              CODE=$(curl -s -o /tmp/b -w "%{http_code}" -m 90 "$BASE$P")
+              echo "STATUS $P -> $CODE"
+            done
+            echo -n "CONTENT_CHECK: "
+            curl -s -m 90 "$BASE/" | grep -o "الوظائف حسب التخصص" | head -1 || echo "(not found)"
+          done
+          echo "PROBE_DONE"
