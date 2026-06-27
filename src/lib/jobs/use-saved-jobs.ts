@@ -75,5 +75,12 @@ export function useSavedJobs() {
     setSaved(next);
   }, []);
 
-  return { saved, isSaved, toggle, remove, ready };
+  // Replace the whole list — used after syncing with the signed-in account so
+  // the server list becomes the source of truth (and mirrors to localStorage).
+  const replaceAll = useCallback((list: SavedJob[]) => {
+    write(list);
+    setSaved(list);
+  }, []);
+
+  return { saved, isSaved, toggle, remove, replaceAll, ready };
 }

@@ -1,11 +1,31 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Building2, MapPin, ExternalLink, Trash2, Bookmark } from "lucide-react";
 import { useSavedJobs } from "@/lib/jobs/use-saved-jobs";
+import { syncSavedJobsAction } from "@/app/(site)/jobs-actions";
 
 export function SavedJobsList() {
-  const { saved, remove, ready } = useSavedJobs();
+  const { saved, remove, replaceAll, ready } = useSavedJobs();
+  const syncedOnce = useRef(false);
+
+  // Once the local list is loaded, sync with the account: if signed in, the
+  // server merges local saves and returns the authoritative list. No-op (and
+  // keeps localStorage) for anonymous users. Failures are ignored.
+  useEffect(() => {
+    if (!ready || syncedOnce.current) return;
+    syncedOnce.current = true;
+    let cancelled = false;
+    syncSavedJobsAction(saved)
+      .then((res) => {
+        if (!cancelled && res.synced) replaceAll(res.jobs);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, saved, replaceAll]);
 
   if (!ready) {
     return <p className="text-sm text-navy/50">جارٍ تحميل وظائفك المحفوظة…</p>;

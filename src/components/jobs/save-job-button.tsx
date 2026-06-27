@@ -2,16 +2,25 @@
 
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useSavedJobs, type SavedJob } from "@/lib/jobs/use-saved-jobs";
+import { toggleSavedJobAction } from "@/app/(site)/jobs-actions";
 
-// Toggle a job in the local saved list. Works without auth/keys (demo mode).
+// Toggle a job's saved state. Updates localStorage instantly (works without
+// auth/keys), and ALSO persists to the account in the background when signed in
+// (the server action is a no-op for anonymous users). Errors are swallowed.
 export function SaveJobButton({ job }: { job: SavedJob }) {
   const { isSaved, toggle, ready } = useSavedJobs();
   const active = ready && isSaved(job.id);
 
+  function onToggle() {
+    const willSave = !active;
+    toggle(job); // optimistic local update
+    void toggleSavedJobAction(job, willSave).catch(() => {});
+  }
+
   return (
     <button
       type="button"
-      onClick={() => toggle(job)}
+      onClick={onToggle}
       aria-pressed={active}
       className={`inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-semibold transition-colors ${
         active

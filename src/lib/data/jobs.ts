@@ -1,18 +1,30 @@
 import "server-only";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/env";
 import { SEED_JOBS } from "@/lib/jobs/seed-jobs";
 import { jobsForMajor } from "@/lib/jobs/matching";
+import { rowToJob } from "@/lib/jobs/row-mappers";
 import { getMajor } from "@/lib/data/majors";
 import type { Job, MatchedJob } from "@/lib/jobs/types";
 import type { Major } from "@/lib/majors";
 
-// Jobs access. Serves the seed catalog now; the ingestion pipeline
-// (src/lib/jobs/ingestion) will write real listings to a Supabase `jobs` table,
-// and this becomes the single read point. Every function is defensive — a
-// failure degrades to seed / empty, never a 500.
+// Jobs access. Reads the Supabase `jobs` table when configured; otherwise (or on
+// ANY error, or while the table is still empty) it falls back to the seed
+// catalog. Every function is defensive — a backend failure degrades to seed,
+// never a 500 / black screen.
 
 export async function getJobs(): Promise<Job[]> {
+  if (!isSupabaseConfigured) return SEED_JOBS;
   try {
-    return SEED_JOBS;
+    const supabase = createSupabaseServerClient();
+    if (!supabase) return SEED_JOBS;
+    const { data, error } = await supabase
+      .from("jobs")
+      .select("*")
+      .order("posted_at", { ascending: false });
+    // Empty table → keep showing seed until real jobs are ingested.
+    if (error || !data || data.length === 0) return SEED_JOBS;
+    return data.map((r) => rowToJob(r as Record<string, unknown>));
   } catch {
     return SEED_JOBS;
   }
