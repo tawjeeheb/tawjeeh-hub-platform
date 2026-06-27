@@ -1,24 +1,34 @@
 name: verify-render
 on:
   workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
 jobs:
   probe:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Probe live Render site
+      - name: Probe live Render site and report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set +e
           BASES="https://tawjeeh-hub.onrender.com https://tawjeeh-hub-platform.onrender.com"
+          REPORT=""
           for BASE in $BASES; do
-            echo "########## $BASE ##########"
-            # one warmup (cold start), bounded
-            curl -s -o /dev/null --connect-timeout 12 -m 75 "$BASE/"
+            REPORT="$REPORT\n### $BASE"
+            curl -s -o /dev/null --connect-timeout 12 -m 75 "$BASE/"   # warmup
             for P in / /majors /majors/biology /auth/login /products; do
-              OUT=$(curl -s -o /tmp/b -w "%{http_code}" --connect-timeout 12 -m 30 "$BASE$P" 2>/tmp/e)
-              RC=$?
-              if [ "$RC" != "0" ]; then echo "STATUS $P -> ERR(curl=$RC $(cat /tmp/e | head -1))"; else echo "STATUS $P -> $OUT"; fi
+              OUT=$(curl -s -o /tmp/b -w "%{http_code}" --connect-timeout 12 -m 30 "$BASE$P"); RC=$?
+              if [ "$RC" != "0" ]; then LINE="$P -> ERR(curl=$RC)"; else LINE="$P -> $OUT"; fi
+              REPORT="$REPORT\n- $LINE"
             done
-            echo -n "CONTENT_CHECK: "; curl -s --connect-timeout 12 -m 30 "$BASE/" | grep -ao "الوظائف حسب التخصص" | head -1; echo ""
+            HIT=$(curl -s --connect-timeout 12 -m 30 "$BASE/" | grep -ac "الوظائف حسب التخصص")
+            REPORT="$REPORT\n- content('الوظائف حسب التخصص') matches: $HIT"
           done
-          echo "PROBE_DONE"
+          printf "%b\n" "$REPORT"
+          # report back via an issue (api.github.com is reachable from my side)
+          printf "%b" "$REPORT" > /tmp/body.md
+          gh issue create --repo "$REPO" --title "render-probe-${{ github.run_id }}" --body-file /tmp/body.md
