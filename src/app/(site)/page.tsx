@@ -29,6 +29,7 @@ import {
   SecureDownloadMark,
 } from "@/components/brand/studio";
 import { Faq } from "@/components/faq";
+import { CareerHubSection } from "@/components/career-hub-section";
 import { getPublicProducts } from "@/lib/data/products";
 
 const PROBLEMS = [
@@ -197,16 +198,16 @@ export default async function HomePage() {
                 <span className="text-teal-700">قبل أن تختار خطوتك التالية</span>
               </h1>
               <p className="mx-auto mt-6 max-w-xl text-balance text-base leading-8 text-navy/70 lg:mx-0 lg:text-lg">
-                أدلة مهنية سعودية منظَّمة تختصر تشتُّت البحث، وتوضّح المسميات
-                والشروط والشهادات وجهات التوظيف لكل تخصص — دليل مرجعي، لا وعد
-                توظيف.
+                مركز توجيه يجمع لك وظائف تخصصك من مكان واحد، مع أدلة مهنية
+                وتوجيه ذكي للمهارات والدورات والشهادات — اختر تخصصك، وشاهد فرصك
+                المناسبة اليوم.
               </p>
               <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
-                <ButtonLink href="/products" size="lg" variant="primary">
-                  استعرض الأدلة المهنية
+                <ButtonLink href="/majors" size="lg" variant="primary">
+                  اختر تخصصك وشاهد وظائفك
                 </ButtonLink>
-                <ButtonLink href="/#how" size="lg" variant="outline">
-                  كيف تعمل المنصة؟
+                <ButtonLink href="/products" size="lg" variant="outline">
+                  استعرض الأدلة المهنية
                 </ButtonLink>
               </div>
               <p className="mt-4 text-sm text-navy/55">
@@ -263,6 +264,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* مركز توجيه: pick your major → jobs → guidance */}
+      <CareerHubSection />
 
       {/* 1. Problem — the research pain */}
       <Section>

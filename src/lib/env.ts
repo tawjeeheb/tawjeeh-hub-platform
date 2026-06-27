@@ -65,18 +65,31 @@ const serverSchema = z
 
 function readServerEnv() {
   const parsed = serverSchema.safeParse(cleanEnv(process.env));
-  if (!parsed.success) {
-    // Surface variable NAMES and validation messages only — these never contain
-    // secret values (zod messages are generic; custom messages name vars only).
-    const flat = parsed.error.flatten();
-    const fieldMsgs = Object.entries(flat.fieldErrors)
-      .map(([k, msgs]) => `${k}: ${(msgs ?? []).join("; ")}`)
-      .join(" | ");
-    const formMsgs = flat.formErrors.join("; ");
-    const detail = [fieldMsgs, formMsgs].filter(Boolean).join(" | ");
-    throw new Error(`Invalid environment configuration — ${detail}`);
-  }
-  return parsed.data;
+  if (parsed.success) return parsed.data;
+
+  // RESILIENCE: an env mistake (e.g. a URL pasted without "https://", or a
+  // partial Supabase config) must NEVER crash the whole app into a blank/500
+  // page. Surface variable NAMES + messages only (never secret values) for the
+  // owner to see in the host logs, then fall back to a SAFE seed-only config so
+  // the public site keeps rendering. Supabase/payment features stay disabled
+  // until the configuration is corrected and the app is redeployed.
+  const flat = parsed.error.flatten();
+  const fieldMsgs = Object.entries(flat.fieldErrors)
+    .map(([k, msgs]) => `${k}: ${(msgs ?? []).join("; ")}`)
+    .join(" | ");
+  const detail = [fieldMsgs, flat.formErrors.join("; ")]
+    .filter(Boolean)
+    .join(" | ");
+  console.error(
+    `Invalid environment configuration — running in SAFE SEED MODE until fixed. ${detail}`,
+  );
+
+  // Salvage a valid site URL if present; drop everything else to defaults — a
+  // configuration that always parses (no Supabase, mock payment).
+  const siteUrl = z.string().url().safeParse(process.env.NEXT_PUBLIC_SITE_URL);
+  return serverSchema.parse(
+    siteUrl.success ? { NEXT_PUBLIC_SITE_URL: siteUrl.data } : {},
+  );
 }
 
 export const env = readServerEnv();
