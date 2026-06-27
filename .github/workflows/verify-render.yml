@@ -4,6 +4,7 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
       - name: Probe live Render site
         run: |
@@ -11,13 +12,13 @@ jobs:
           BASES="https://tawjeeh-hub.onrender.com https://tawjeeh-hub-platform.onrender.com"
           for BASE in $BASES; do
             echo "########## $BASE ##########"
-            # Warm up (free tier cold start can take ~60s)
-            curl -s -o /dev/null -m 90 "$BASE/" 
-            for P in / /majors /majors/biology /auth/login /products /sitemap.xml; do
-              CODE=$(curl -s -o /tmp/b -w "%{http_code}" -m 90 "$BASE$P")
-              echo "STATUS $P -> $CODE"
+            # one warmup (cold start), bounded
+            curl -s -o /dev/null --connect-timeout 12 -m 75 "$BASE/"
+            for P in / /majors /majors/biology /auth/login /products; do
+              OUT=$(curl -s -o /tmp/b -w "%{http_code}" --connect-timeout 12 -m 30 "$BASE$P" 2>/tmp/e)
+              RC=$?
+              if [ "$RC" != "0" ]; then echo "STATUS $P -> ERR(curl=$RC $(cat /tmp/e | head -1))"; else echo "STATUS $P -> $OUT"; fi
             done
-            echo -n "CONTENT_CHECK: "
-            curl -s -m 90 "$BASE/" | grep -o "الوظائف حسب التخصص" | head -1 || echo "(not found)"
+            echo -n "CONTENT_CHECK: "; curl -s --connect-timeout 12 -m 30 "$BASE/" | grep -ao "الوظائف حسب التخصص" | head -1; echo ""
           done
           echo "PROBE_DONE"
