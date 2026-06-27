@@ -12,9 +12,13 @@ services:
     startCommand: npm run start -- -p $PORT
     healthCheckPath: /
     envVars:
-      # Match the tested runtime (build is verified on Node 22).
+      # Match the tested runtime (build verified on Node 22). NODE 20 was the
+      # cause of the failing Render builds; Node 22 + a build heap cap is the
+      # PROVEN-GOOD config (deploy of 2a37eb0 succeeded with exactly this).
       - key: NODE_VERSION
         value: "22"
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=460"
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
       # Non-secret defaults (kept in the blueprint):
